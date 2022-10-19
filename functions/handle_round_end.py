@@ -13,6 +13,8 @@ def handle_round_end(table, apig_management_client):
     try:
         scan_response = table.scan()
         for item in scan_response['Items']:
+            if item["turn_status"] == "hosting": 
+                continue
             Item={}
             for key, attribute in item.items():
                 if isinstance(attribute, Decimal):
@@ -34,15 +36,16 @@ def handle_round_end(table, apig_management_client):
 
     response_data=[]
     for item in data:
+        points=0
         if item["guess"] == total_answer:
             points=100
         elif item["guess"] == total_answer+1 or item["guess"] == total_answer-1:
             points=50
         table.update_item(
-                Key={'connection_id': item["connection_id"]},
-                UpdateExpression = "ADD points :p",
-                ExpressionAttributeValues={
-                    ':p': points
+            Key={'connection_id': item["connection_id"]},
+            UpdateExpression = "ADD points :p",
+            ExpressionAttributeValues={
+                ':p': points
         })
 
         if not "points" in item:

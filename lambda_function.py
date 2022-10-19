@@ -41,7 +41,8 @@ def lambda_handler(event, context):
 
     if route_key == '$connect':
         user_name = event.get('queryStringParameters', {'name': 'guest'}).get('name')
-        response['statusCode'] = handle_connect(user_name, table, connection_id, apig_management_client)
+        is_host = event.get('queryStringParameters', {'host': 0}).get("host")
+        response['statusCode'] = handle_connect(user_name, table, connection_id, apig_management_client, is_host)
     
     elif route_key == '$disconnect':
         response['statusCode'] = handle_disconnect(table, connection_id, apig_management_client)
