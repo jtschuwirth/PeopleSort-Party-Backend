@@ -9,6 +9,7 @@ def handle_round_end(table, apig_management_client):
 
     status_code = 200
     data=[]
+    total_answer=0
     try:
         scan_response = table.scan()
         for item in scan_response['Items']:
@@ -16,6 +17,8 @@ def handle_round_end(table, apig_management_client):
             for key, attribute in item.items():
                 if isinstance(attribute, Decimal):
                     Item[key] = int(attribute)
+                    if key == "answer":
+                        total_answer+=Item[key]
                 else:
                     Item[key] = attribute
             data.append(Item)
@@ -29,9 +32,29 @@ def handle_round_end(table, apig_management_client):
     except ClientError:
         status_code = 404
 
+    response_data=[]
+    for item in data:
+        if item["guess"] == total_answer:
+            points=100
+        elif item["guess"] == total_answer+1 or item["guess"] == total_answer-1:
+            points=50
+        table.update_item(
+                Key={'connection_id': item["connection_id"]},
+                UpdateExpression = "ADD points :p",
+                ExpressionAttributeValues={
+                    ':p': points
+        })
+
+        if not "points" in item:
+            item["points"] = points
+        else:
+            item["points"]+= points
+
+        response_data.append(item)
+
     try:
         recipients = get_all_recipients(table)
-        message = json.dumps({"turn_stats":data})
+        message = json.dumps({"turn_stats":response_data})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503
