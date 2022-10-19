@@ -1,5 +1,7 @@
 import logging
+import json
 from botocore.exceptions import ClientError
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -12,8 +14,14 @@ def handle_round_end(table, apig_management_client):
     try:
         scan_response = table.scan()
         for item in scan_response['Items']:
+            Item={}
+            for key, attribute in item.items():
+                if isinstance(attribute, Decimal):
+                    Item[key] = int(attribute)
+                else:
+                    Item[key] = attribute
+            data.append(Item)
             connection_ids.append(item['connection_id'])
-            data.append(item)
 
             table.update_item(
                 Key={'connection_id': item["connection_id"]},
@@ -26,7 +34,7 @@ def handle_round_end(table, apig_management_client):
         logger.exception("Couldn't get connections.")
         status_code = 404
 
-    message = "Round Ended"
+    message = json.dumps(data)
     logger.info("Message: %s", message)
 
     for other_conn_id in connection_ids:
