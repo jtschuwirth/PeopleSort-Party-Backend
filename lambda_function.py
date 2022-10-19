@@ -7,6 +7,9 @@ import json
 from functions.handle_connect import handle_connect
 from functions.handle_disconnect import handle_disconnect
 from functions.handle_message import handle_message
+from functions.check_if_all_passed import check_if_all_passed
+from functions.handle_turn_end import handle_turn_end
+from functions.handle_round_end import handle_round_end
 
 my_session = boto3.session.Session(
     aws_access_key_id=os.environ.get("ACCESS_KEY"),
@@ -36,7 +39,7 @@ def lambda_handler(event, context):
         response['statusCode'] = handle_disconnect(table, connection_id)
     elif route_key == 'sendmessage':
         body = event.get('body')
-        body = json.loads(body if body is not None else '{"msg": ""}')
+        body = json.loads(body if "msg" in body  else '{"msg": ""}')
         domain = event.get('requestContext', {}).get('domainName')
         stage = event.get('requestContext', {}).get('stage')
         if domain is None or stage is None:
@@ -48,6 +51,46 @@ def lambda_handler(event, context):
             apig_management_client = my_session.client(
                 'apigatewaymanagementapi', endpoint_url=f'https://{domain}/{stage}')
             response['statusCode'] = handle_message(table, connection_id, body, apig_management_client)
+    
+    elif route_key == "endturn":
+        body = event.get('body')
+        body = json.loads(body)
+
+        table.update_item(
+            Key={'connection_id': connection_id},
+            UpdateExpression = "SET turn_status = :status",
+            ExpressionAttributeValues={
+                ':status': "done"
+        })
+
+        table.update_item(
+            Key={'connection_id': connection_id},
+            UpdateExpression = "SET answer = :answer",
+            ExpressionAttributeValues={
+                ':answer': body["answer"]
+        }) 
+
+        table.update_item(
+            Key={'connection_id': connection_id},
+            UpdateExpression = "SET guess = :guess",
+            ExpressionAttributeValues={
+                ':guess': body["guess"]
+        }) 
+
+        domain = event.get('requestContext', {}).get('domainName')
+        stage = event.get('requestContext', {}).get('stage')
+        if domain is None or stage is None:
+            logger.warning(
+                "Couldn't send message. Bad endpoint in request: domain '%s', "
+                "stage '%s'", domain, stage)
+            response['statusCode'] = 400
+        else:
+            apig_management_client = my_session.client('apigatewaymanagementapi', endpoint_url=f'https://{domain}/{stage}')
+            if check_if_all_passed(table):
+                response["statusCode"]=handle_round_end(table, apig_management_client)
+            else:
+                response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
+
     else:
         response['statusCode'] = 404
 

@@ -17,7 +17,7 @@ def handle_connect(user_name, table, connection_id):
     status_code = 200
     try:
         table.put_item(
-            Item={'connection_id': connection_id, 'user_name': user_name})
+            Item={'connection_id': connection_id, 'user_name': user_name, "turn_status": "playing"})
         logger.info(
             "Added connection %s for user %s.", connection_id, user_name)
     except ClientError:
