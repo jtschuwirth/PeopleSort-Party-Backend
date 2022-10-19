@@ -29,28 +29,27 @@ def lambda_handler(event, context):
         return {'statusCode': 400}
     
     table = my_session.resource('dynamodb').Table(table_name)
-    logger.info("Request: %s, use table %s.", route_key, table.name)
-
     response = {'statusCode': 200}
+
+    domain = event.get('requestContext', {}).get('domainName')
+    stage = event.get('requestContext', {}).get('stage')
+    if domain is None or stage is None:
+        response['statusCode'] = 400
+        return response
+    else:
+        apig_management_client = my_session.client('apigatewaymanagementapi', endpoint_url=f'https://{domain}/{stage}')
+
     if route_key == '$connect':
         user_name = event.get('queryStringParameters', {'name': 'guest'}).get('name')
-        response['statusCode'] = handle_connect(user_name, table, connection_id)
+        response['statusCode'] = handle_connect(user_name, table, connection_id, apig_management_client)
+    
     elif route_key == '$disconnect':
-        response['statusCode'] = handle_disconnect(table, connection_id)
+        response['statusCode'] = handle_disconnect(table, connection_id, apig_management_client)
+
     elif route_key == 'sendmessage':
         body = event.get('body')
         body = json.loads(body if "msg" in body  else '{"msg": ""}')
-        domain = event.get('requestContext', {}).get('domainName')
-        stage = event.get('requestContext', {}).get('stage')
-        if domain is None or stage is None:
-            logger.warning(
-                "Couldn't send message. Bad endpoint in request: domain '%s', "
-                "stage '%s'", domain, stage)
-            response['statusCode'] = 400
-        else:
-            apig_management_client = my_session.client(
-                'apigatewaymanagementapi', endpoint_url=f'https://{domain}/{stage}')
-            response['statusCode'] = handle_message(table, connection_id, body, apig_management_client)
+        response['statusCode'] = handle_message(table, connection_id, body, apig_management_client)
     
     elif route_key == "endturn":
         body = event.get('body')
@@ -76,20 +75,10 @@ def lambda_handler(event, context):
             ExpressionAttributeValues={
                 ':guess': body["guess"]
         }) 
-
-        domain = event.get('requestContext', {}).get('domainName')
-        stage = event.get('requestContext', {}).get('stage')
-        if domain is None or stage is None:
-            logger.warning(
-                "Couldn't send message. Bad endpoint in request: domain '%s', "
-                "stage '%s'", domain, stage)
-            response['statusCode'] = 400
+        if check_if_all_passed(table):
+            response["statusCode"]=handle_round_end(table, apig_management_client)
         else:
-            apig_management_client = my_session.client('apigatewaymanagementapi', endpoint_url=f'https://{domain}/{stage}')
-            if check_if_all_passed(table):
-                response["statusCode"]=handle_round_end(table, apig_management_client)
-            else:
-                response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
+            response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
 
     else:
         response['statusCode'] = 404
