@@ -8,11 +8,21 @@ def handle_connect(user_name, table, connection_id, apig_management_client, is_h
     status_code = 200
     try:
         if is_host:
-            table.put_item(Item={'connection_id': connection_id, 'user_name': user_name, "turn_status": "hosting"})
+            table.put_item(Item={
+                'connection_id': connection_id, 
+                'user_name': user_name, 
+                "turn_status": "hosting",
+                "points":0
+                })
         else:
-            table.put_item(Item={'connection_id': connection_id, 'user_name': user_name, "turn_status": "playing"})
+            table.put_item(Item={
+                'connection_id': connection_id, 
+                'user_name': user_name, 
+                "turn_status": "playing",
+                "points":0
+                })
         recipients = get_all_recipients(table)
-        message = json.dumps({"connected": connection_id, "user_name": user_name})
+        message = json.dumps({"new_connection":{"id": connection_id, "user_name": user_name, "points":0}})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503

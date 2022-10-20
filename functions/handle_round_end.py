@@ -57,7 +57,7 @@ def handle_round_end(table, apig_management_client):
 
     try:
         recipients = get_all_recipients(table)
-        message = json.dumps({"turn_stats":response_data})
+        message = json.dumps({"round_end":response_data})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503
