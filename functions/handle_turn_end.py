@@ -10,7 +10,7 @@ def handle_turn_end(table, connection_id, apig_management_client):
     try:
         item_response = table.get_item(Key={'connection_id': connection_id})
         user_name = item_response['Item']['user_name']
-        points = item_response['Item']['points']
+        points = int(item_response['Item']['points'])
 
         recipients = get_all_recipients(table)
         message = json.dumps({"turn_end":{"id": connection_id, "user_name": user_name, "points":points}})

@@ -49,8 +49,10 @@ def handle_round_end(table, apig_management_client):
         })
 
         if not "points" in item:
+            item["last_turn_points"] = 0
             item["points"] = points
         else:
+            item["last_turn_points"] = item["points"]
             item["points"]+= points
 
         response_data.append(item)
