@@ -8,8 +8,8 @@ def handle_disconnect(table, connection_id, apig_management_client):
     status_code = 200
     try:
         item_response = table.get_item(Key={'connection_id': connection_id})
-        room_id = item_response["room_id"]
         table.delete_item(Key={'connection_id': connection_id})
+        room_id = item_response['Item']['room_id']
         recipients = get_all_recipients(table, room_id)
         message = json.dumps({"disconnected": connection_id})
         handle_ws_message(table, recipients, message, apig_management_client)
