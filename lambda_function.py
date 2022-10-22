@@ -78,7 +78,7 @@ def lambda_handler(event, context):
                 ':guess': body["guess"]
         }) 
         if check_if_all_passed(table):
-            response["statusCode"]=handle_round_end(table, apig_management_client)
+            response["statusCode"]=handle_round_end(table, connection_id, apig_management_client)
         else:
             response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
 
