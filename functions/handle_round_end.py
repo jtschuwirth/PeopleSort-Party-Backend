@@ -5,14 +5,12 @@ from decimal import Decimal
 from functions.get_all_recipients import get_all_recipients
 from functions.handle_ws_message import handle_ws_message
 
-def handle_round_end(table, connection_id, apig_management_client):
+def handle_round_end(table, room_id, apig_management_client):
 
     status_code = 200
     data=[]
     total_answer=0
     try:
-        item_response = table.get_item(Key={'connection_id': connection_id})
-        room_id = item_response['Item']['room_id']
         scan_response = table.scan(
             FilterExpression="room_id = :id",
             ExpressionAttributeValues={
@@ -38,7 +36,7 @@ def handle_round_end(table, connection_id, apig_management_client):
                     ':status': "playing"
         }) 
     except ClientError:
-        status_code = 404
+        return 404
 
     response_data=[]
     for item in data:

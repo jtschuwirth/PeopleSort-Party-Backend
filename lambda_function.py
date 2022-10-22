@@ -77,10 +77,14 @@ def lambda_handler(event, context):
             ExpressionAttributeValues={
                 ':guess': body["guess"]
         }) 
-        if check_if_all_passed(table):
-            response["statusCode"]=handle_round_end(table, connection_id, apig_management_client)
+
+        item_response = table.get_item(Key={'connection_id': connection_id})
+        room_id = item_response['Item']['room_id']
+
+        if check_if_all_passed(table, room_id):
+            response["statusCode"]=handle_round_end(table, room_id, apig_management_client)
         else:
-            response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
+            response["statusCode"]=handle_turn_end(table, connection_id, item_response, apig_management_client)
 
     else:
         response['statusCode'] = 404
