@@ -5,13 +5,17 @@ from decimal import Decimal
 from functions.get_all_recipients import get_all_recipients
 from functions.handle_ws_message import handle_ws_message
 
-def handle_round_end(table, apig_management_client):
+def handle_round_end(table, room_id, apig_management_client):
 
     status_code = 200
     data=[]
     total_answer=0
     try:
-        scan_response = table.scan()
+        scan_response = table.scan(
+            FilterExpression="room_id = :id",
+            ExpressionAttributeValues={
+                ":id": room_id   
+        })
         for item in scan_response['Items']:
             if item["turn_status"] == "hosting": 
                 continue
@@ -32,7 +36,7 @@ def handle_round_end(table, apig_management_client):
                     ':status': "playing"
         }) 
     except ClientError:
-        status_code = 404
+        return 404
 
     response_data=[]
     for item in data:
@@ -58,8 +62,8 @@ def handle_round_end(table, apig_management_client):
         response_data.append(item)
 
     try:
-        recipients = get_all_recipients(table)
-        message = json.dumps({"round_end":response_data})
+        recipients = get_all_recipients(table, room_id)
+        message = json.dumps({"round_end": response_data})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503

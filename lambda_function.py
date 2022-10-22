@@ -42,7 +42,8 @@ def lambda_handler(event, context):
     if route_key == '$connect':
         user_name = event.get('queryStringParameters', {'name': 'guest'}).get('name')
         is_host = event.get('queryStringParameters', {'host': 0}).get("host")
-        response['statusCode'] = handle_connect(user_name, table, connection_id, apig_management_client, is_host)
+        room_id = event.get('queryStringParameters', {'room': "aaaa"}).get("room")
+        response['statusCode'] = handle_connect(user_name, table, connection_id, apig_management_client, is_host, room_id)
     
     elif route_key == '$disconnect':
         response['statusCode'] = handle_disconnect(table, connection_id, apig_management_client)
@@ -76,10 +77,14 @@ def lambda_handler(event, context):
             ExpressionAttributeValues={
                 ':guess': body["guess"]
         }) 
-        if check_if_all_passed(table):
-            response["statusCode"]=handle_round_end(table, apig_management_client)
+
+        item_response = table.get_item(Key={'connection_id': connection_id})
+        room_id = item_response['Item']['room_id']
+
+        if check_if_all_passed(table, room_id):
+            response["statusCode"]=handle_round_end(table, room_id, apig_management_client)
         else:
-            response["statusCode"]=handle_turn_end(table, connection_id, apig_management_client)
+            response["statusCode"]=handle_turn_end(table, connection_id, item_response, apig_management_client)
 
     else:
         response['statusCode'] = 404

@@ -1,3 +1,6 @@
 .env
 python
 ws-chat.zip
+nuncanunca.zip
+__pycache__
+/tests
