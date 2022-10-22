@@ -10,7 +10,7 @@ def handle_disconnect(table, connection_id, apig_management_client):
         query = table.query(
             KeyConditionExpression = "connection_id = :id",
             ExpressionAttributeValues={
-            ":id": { "S": connection_id }
+            ":id": connection_id
         })
         for i in query["Items"]:
             room_id = i["room_id"]
