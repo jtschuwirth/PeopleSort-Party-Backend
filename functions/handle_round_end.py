@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from functions.get_all_recipients import get_all_recipients
 from functions.handle_ws_message import handle_ws_message
+from functions.getNewPrompt import getNewPrompt
 
 def handle_round_end(table, room_id, apig_management_client):
 
@@ -60,10 +61,10 @@ def handle_round_end(table, room_id, apig_management_client):
             item["points"]+= points
 
         response_data.append(item)
-
     try:
+        prompt = getNewPrompt()
         recipients = get_all_recipients(table, room_id)
-        message = json.dumps({"round_end": response_data})
+        message = json.dumps({"round_end": response_data, "new_prompt": prompt})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503
