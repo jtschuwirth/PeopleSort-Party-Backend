@@ -10,6 +10,7 @@ from functions.handle_message import handle_message
 from functions.check_if_all_passed import check_if_all_passed
 from functions.handle_turn_end import handle_turn_end
 from functions.handle_round_end import handle_round_end
+from functions.handle_game_start import handle_game_start
 
 my_session = boto3.session.Session(
     aws_access_key_id=os.environ.get("ACCESS_KEY"),
@@ -52,6 +53,9 @@ def lambda_handler(event, context):
         body = event.get('body')
         body = json.loads(body if "msg" in body  else '{"msg": ""}')
         response['statusCode'] = handle_message(table, connection_id, body, apig_management_client)
+    
+    elif route_key == "startgame":
+        response['statusCode'] = handle_game_start(table, connection_id, apig_management_client)
     
     elif route_key == "endturn":
         body = event.get('body')

@@ -18,7 +18,8 @@ def handle_round_end(table, room_id, apig_management_client):
                 ":id": room_id   
         })
         for item in scan_response['Items']:
-            if item["turn_status"] == "hosting": 
+            if item["turn_status"] == "hosting":
+                level = item["lvl"]
                 continue
             Item={}
             for key, attribute in item.items():
@@ -62,7 +63,7 @@ def handle_round_end(table, room_id, apig_management_client):
 
         response_data.append(item)
     try:
-        prompt = getNewPrompt()
+        prompt = getNewPrompt(level)
         recipients = get_all_recipients(table, room_id)
         message = json.dumps({"round_end": response_data, "new_prompt": prompt})
         handle_ws_message(table, recipients, message, apig_management_client)
