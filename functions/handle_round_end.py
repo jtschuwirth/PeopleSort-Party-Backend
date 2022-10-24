@@ -1,5 +1,4 @@
 import json
-from botocore.exceptions import ClientError
 from decimal import Decimal
 
 from functions.get_all_recipients import get_all_recipients
@@ -37,37 +36,58 @@ def handle_round_end(table, room_id, apig_management_client):
                 ExpressionAttributeValues={
                     ':status': "playing"
         }) 
-    except ClientError:
+    except:
         return 404
 
     response_data=[]
-    for item in data:
-        points=0
-        if item["guess"] == total_answer:
-            points=100
-        elif item["guess"] == total_answer+1 or item["guess"] == total_answer-1:
-            points=50
-        table.update_item(
-            Key={'connection_id': item["connection_id"]},
-            UpdateExpression = "ADD points :p",
-            ExpressionAttributeValues={
-                ':p': points
-        })
-
-        if not "points" in item:
-            item["last_turn_points"] = 0
-            item["points"] = points
-        else:
-            item["last_turn_points"] = item["points"]
-            item["points"]+= points
-
-        response_data.append(item)
     try:
-        prompt = getNewPrompt(level)
+        for item in data:
+            points=0
+            if item["guess"] == total_answer:
+                points=100
+            elif item["guess"] == total_answer+1 or item["guess"] == total_answer-1:
+                points=50
+            table.update_item(
+                Key={'connection_id': item["connection_id"]},
+                UpdateExpression = "ADD points :p",
+                ExpressionAttributeValues={
+                    ':p': points
+            })
+
+            if not "points" in item:
+                item["last_turn_points"] = 0
+                item["points"] = points
+            else:
+                item["last_turn_points"] = item["points"]
+                item["points"]+= points
+
+            response_data.append(item)
+    except:
+        status_code=503
+    
+    maximum_recon_tries = 3
+    reconnection_tries = 0
+
+    while reconnection_tries < maximum_recon_tries:
+        try:
+            prompt = getNewPrompt(level)
+            if prompt["phrase"]:
+                break
+            else:
+                prompt = 0
+        except:
+            prompt = 0
+
+        reconnection_tries+=1
+
+    if not prompt:
+        prompt = {"phrase": "Error fetching prompt", "lvl":1}
+
+    try:
         recipients = get_all_recipients(table, room_id)
         message = json.dumps({"round_end": response_data, "new_prompt": prompt})
         handle_ws_message(table, recipients, message, apig_management_client)
-    except ClientError:
+    except:
         status_code = 503
 
     return status_code

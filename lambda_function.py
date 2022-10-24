@@ -1,7 +1,6 @@
 
 import os
 import boto3
-import logging
 import json
 
 from functions.handle_connect import handle_connect
@@ -17,9 +16,6 @@ my_session = boto3.session.Session(
     aws_secret_access_key=os.environ.get("SECRET_KEY"),
     region_name = "us-east-1",
 )
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     table_name = os.environ['TABLE_NAME']
