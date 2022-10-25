@@ -25,7 +25,7 @@ def handle_game_start(table, connection_id, apig_management_client):
                         ':status': "playing"
                 }) 
 
-        prompt = getNewPrompt(item_response["Item"]["lvl"])
+        prompt = getNewPrompt(1, 0, room_id)
         message = json.dumps({"starting_game": prompt})
         handle_ws_message(table, recipients, message, apig_management_client)
         

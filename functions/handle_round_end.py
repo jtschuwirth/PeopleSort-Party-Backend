@@ -19,7 +19,15 @@ def handle_round_end(table, room_id, apig_management_client):
         for item in scan_response['Items']:
             if item["turn_status"] == "hosting":
                 level = item["lvl"]
+                index = item[f"current_lvl{level}"]
+                table.update_item(
+                        Key={'connection_id': item["connection_id"]},
+                        UpdateExpression = f"ADD current_lvl{level} :v",
+                        ExpressionAttributeValues={
+                            ':v': 1
+                })
                 continue
+
             Item={}
             for key, attribute in item.items():
                 if isinstance(attribute, Decimal):
@@ -35,7 +43,7 @@ def handle_round_end(table, room_id, apig_management_client):
                 UpdateExpression = "SET turn_status = :status",
                 ExpressionAttributeValues={
                     ':status': "playing"
-        }) 
+            })
     except:
         return 404
 
@@ -70,7 +78,7 @@ def handle_round_end(table, room_id, apig_management_client):
 
     while reconnection_tries < maximum_recon_tries:
         try:
-            prompt = getNewPrompt(level)
+            prompt = getNewPrompt(level, index, room_id)
             if prompt["phrase"]:
                 break
             else:

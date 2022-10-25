@@ -15,7 +15,10 @@ def handle_connect(user_name, table, connection_id, apig_management_client, is_h
             'user_name': user_name, 
             "turn_status": turn_status,
             "points":0,
-            "lvl":1
+            "lvl":1,
+            "current_lvl1":1,
+            "current_lvl2":0,
+            "current_lvl3":0
         })
         recipients = get_all_recipients(table, room_id)
         message = json.dumps({"new_connection":{"id": connection_id, "user_name": user_name, "points":0}})
