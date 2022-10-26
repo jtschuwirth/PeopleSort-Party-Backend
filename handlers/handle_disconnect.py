@@ -1,10 +1,10 @@
 import json
+
 from botocore.exceptions import ClientError
+from auxiliary_functions.handle_ws_message import handle_ws_message
+from auxiliary_functions.get_all_recipients import get_all_recipients
 
-from functions.handle_ws_message import handle_ws_message
-from functions.get_all_recipients import get_all_recipients
-
-def handle_disconnect(table, connection_id, apig_management_client):
+def handle_disconnect(table, event, connection_id, apig_management_client):
     status_code = 200
     try:
         item_response = table.get_item(Key={'connection_id': connection_id})

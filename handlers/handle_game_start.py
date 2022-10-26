@@ -1,11 +1,11 @@
 import json
+
 from botocore.exceptions import ClientError
+from auxiliary_functions.get_all_recipients import get_all_recipients
+from auxiliary_functions.handle_ws_message import handle_ws_message
+from game_functions.getNewPrompt import getNewPrompt
 
-from functions.get_all_recipients import get_all_recipients
-from functions.handle_ws_message import handle_ws_message
-from functions.getNewPrompt import getNewPrompt
-
-def handle_game_start(table, connection_id, apig_management_client):
+def handle_game_start(table, event, connection_id, apig_management_client):
     status_code = 200
 
     try:

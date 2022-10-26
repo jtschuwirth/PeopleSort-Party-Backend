@@ -1,11 +1,13 @@
 import json
+
 from decimal import Decimal
+from game_functions.getNewPrompt import getNewPrompt
 
-from functions.get_all_recipients import get_all_recipients
-from functions.handle_ws_message import handle_ws_message
-from functions.getNewPrompt import getNewPrompt
+from auxiliary_functions.get_all_recipients import get_all_recipients
+from auxiliary_functions.handle_ws_message import handle_ws_message
 
-def handle_round_end(table, room_id, apig_management_client):
+
+def round_end(table, room_id, apig_management_client):
 
     status_code = 200
     data=[]

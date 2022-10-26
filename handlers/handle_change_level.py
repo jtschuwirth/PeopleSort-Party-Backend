@@ -1,12 +1,11 @@
 import json
 from botocore.exceptions import ClientError
 
-from functions.get_all_recipients import get_all_recipients
-from functions.handle_ws_message import handle_ws_message
-from functions.getNewPrompt import getNewPrompt
-
-def handle_change_level(table, level, connection_id):
+def handle_change_level(table, event, connection_id, apig_management_client):
     status_code = 200
+    body = event.get('body')
+    body = json.loads(body)
+    level = body["level"]
 
     try:
         table.update_item(

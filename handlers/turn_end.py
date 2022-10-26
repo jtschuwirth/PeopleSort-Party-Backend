@@ -1,10 +1,10 @@
 import json
+
 from botocore.exceptions import ClientError
+from auxiliary_functions.get_all_recipients import get_all_recipients
+from auxiliary_functions.handle_ws_message import handle_ws_message
 
-from functions.get_all_recipients import get_all_recipients
-from functions.handle_ws_message import handle_ws_message
-
-def handle_turn_end(table, connection_id, item_response, apig_management_client):
+def turn_end(table, connection_id, item_response, apig_management_client):
     status_code = 200
 
     try:
