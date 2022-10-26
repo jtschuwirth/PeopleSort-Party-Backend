@@ -1,2 +1,2 @@
-def handle_connect(table, event, connection_id, apig_management_client):
+def handle_disconnect(table, event, connection_id, apig_management_client):
     pass
