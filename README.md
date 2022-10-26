@@ -1,1 +1,1 @@
-# Never have i ever online game
+# Template for creating websocket backend applications on top of aws lambda
