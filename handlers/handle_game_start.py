@@ -19,7 +19,7 @@ def handle_game_start(table, event, connection_id, apig_management_client):
         recipients = get_all_recipients(table, room_id)
         for con_id in recipients:
             if con_id != connection_id:
-                player = table.get_item(Key={'connection_id': connection_id})
+                player = table.get_item(Key={'connection_id': con_id})
                 players.append({"user_name": player["Item"]["user_name"], "connection_id": con_id, "points":0})
                 table.update_item(
                     Key={'connection_id': con_id},
