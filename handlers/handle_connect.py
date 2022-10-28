@@ -11,8 +11,23 @@ def handle_connect(table, event, connection_id, apig_management_client):
     is_host = event.get('queryStringParameters', {'host': 0}).get("host")
     room_id = event.get('queryStringParameters', {'room': "aaaa"}).get("room")
 
+    is_there_host=0
+    players = {}
+
+    scan_response = table.scan(
+        FilterExpression="room_id = :id",
+        ExpressionAttributeValues={
+                ":id": room_id   
+        })
+    for item in scan_response["Items"]:
+        if item["turn_status"] == "hosting":
+            is_there_host = 1
+        else:
+            players[item["user_name"]] = {"connection_id": item["connection_id"], "points": item["points"]}
+
     try:
-        if is_host:
+        message = json.dumps({"new_connection":{"id": connection_id, "user_name": user_name, "points":0}})
+        if is_host and not is_there_host:
             table.put_item(Item={
                 'connection_id': connection_id,
                 'room_id': room_id,
@@ -20,7 +35,8 @@ def handle_connect(table, event, connection_id, apig_management_client):
                 "turn_status": "hosting",
                 "current_index":1
             })
-        else:
+
+        elif not is_host and is_there_host and user_name not in players:
             table.put_item(Item={
                 'connection_id': connection_id, 
                 'room_id': room_id, 
@@ -28,8 +44,21 @@ def handle_connect(table, event, connection_id, apig_management_client):
                 "turn_status": "waiting",
                 "points":0,
             })
+        
+        elif not is_host and is_there_host and user_name in players:
+            table.put_item(Item={
+                'connection_id': connection_id, 
+                'room_id': room_id, 
+                'user_name': user_name, 
+                "turn_status": "waiting",
+                "points": players[user_name]["points"]
+            })
+            table.delete_item(Key={'connection_id': players[user_name]["connection_id"]})
+
+        else:
+            message = json.dumps({"connection_error": "error connecting to this room"})
+
         recipients = get_all_recipients(table, room_id)
-        message = json.dumps({"new_connection":{"id": connection_id, "user_name": user_name, "points":0}})
         handle_ws_message(table, recipients, message, apig_management_client)
     except ClientError:
         status_code = 503
