@@ -12,6 +12,7 @@ def round_end(table, room_id, apig_management_client):
 
     status_code = 200
     data=[]
+    index = 0
     try:
         scan_response = table.scan(
             FilterExpression="room_id = :id",
@@ -20,7 +21,7 @@ def round_end(table, room_id, apig_management_client):
         })
         for item in scan_response['Items']:
             if item["turn_status"] == "hosting":
-                index = item["current_index"]
+                index = int(item["current_index"])
                 table.update_item(
                     Key={'connection_id': item["connection_id"]},
                     UpdateExpression = f"ADD current_index :v",
@@ -46,12 +47,13 @@ def round_end(table, room_id, apig_management_client):
     except:
         return 404
 
-    response_data = point_distribution(data)
+    print(data)
+    response_data, correct_order = point_distribution(data)
     prompt = getNewPrompt(index, room_id)
 
     try:
         recipients = get_all_recipients(table, room_id)
-        message = json.dumps({"round_end": response_data, "new_prompt": prompt})
+        message = json.dumps({"round_end": response_data, "new_prompt": prompt, "correct_order": correct_order})
         handle_ws_message(table, recipients, message, apig_management_client)
     except:
         status_code = 503
