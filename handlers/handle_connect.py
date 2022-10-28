@@ -27,7 +27,6 @@ def handle_connect(table, event, connection_id, apig_management_client):
                 'user_name': user_name, 
                 "turn_status": "waiting",
                 "points":0,
-                "last_turn_points":0
             })
         recipients = get_all_recipients(table, room_id)
         message = json.dumps({"new_connection":{"id": connection_id, "user_name": user_name, "points":0}})

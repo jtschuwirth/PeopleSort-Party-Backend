@@ -37,20 +37,30 @@ def round_scores(data, errors):
     return users_score
 
 
-def point_distribution(data):
+def point_distribution(table, data):
+    clean_user_list = []
     for user in data: 
         user["last_turn_points"] = user["points"]
-        user["answer"] = [dic["user_name"] for dic in  user["answer"]]
+        if "answer" in user:
+            user["answer"] = [dic["user_name"] for dic in  user["answer"]]
+            clean_user_list.append(user)
+
+            
 
     #refactorizar para que funcione con este tipo de answer
 
-    correct_answer = average_positions(data)
-    errors = round_errors(data, correct_answer)
-    scores = round_scores(data, errors)
+    correct_answer = average_positions(clean_user_list)
+    errors = round_errors(clean_user_list, correct_answer)
+    scores = round_scores(clean_user_list, errors)
 
-    for user in data:
-        user["points"] = user["last_turn_points"] + \
-                                 scores[user["user_name"]]
+    for user in clean_user_list:
+        user["points"] = user["last_turn_points"] + scores[user["user_name"]]
+        table.update_item(
+            Key={'connection_id': user["connection_id"]},
+            UpdateExpression = f"ADD points :p",
+            ExpressionAttributeValues={
+                ':p': scores[user["user_name"]]
+            })
     
     answer = [(correct_answer[name], name) for name in correct_answer]
     answer.sort()

@@ -47,8 +47,7 @@ def round_end(table, room_id, apig_management_client):
     except:
         return 404
 
-    print(data)
-    response_data, correct_order = point_distribution(data)
+    response_data, correct_order = point_distribution(table, data)
     prompt = getNewPrompt(index, room_id)
 
     try:
