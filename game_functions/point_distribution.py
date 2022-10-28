@@ -65,4 +65,5 @@ def point_distribution(table, data):
     answer = [(correct_answer[name], name) for name in correct_answer]
     answer.sort()
 
+    #instead of distance return the placement of the user
     return data, [{"user_name":i[1], "distance":round(i[0],3)} for i in answer]
