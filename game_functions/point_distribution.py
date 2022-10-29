@@ -81,5 +81,6 @@ def point_distribution(table, data):
                           "distance": j
             }
         )
+        last_user_avg_pos = answer[0]
 
     return data, c_answer
